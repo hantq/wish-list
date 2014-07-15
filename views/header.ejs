@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Wish List</title>
+<link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+<body>
+
+<header>
+<h1><%= title %></h1>
+</header>
+
+<nav>
+<span><a title="主页" href="/">Home</a></span>
+<% if(user) { %>
+<span><a title="添加愿望" href="/addwish">Add a wish</a></span>
+<span><a title="修改愿望" href="/editwish">Edit a wish</a></span>
+<span><a title="修改密码" href="/editpassword">Edit password</a></span>
+<span><a title="登出" href="/signout">Sign Out</a></span>
+<% } else { %>
+<span><a title="登录" href="/signin">Sign In</a></span>
+<span><a title="注册" href="/signup">Sign Up</a></span>
+<% } %>
+</nav>
+
+<article>

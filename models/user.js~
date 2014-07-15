@@ -1,0 +1,85 @@
+var settings = require('../settings');
+var crypto = require('crypto');
+var mongoose = require('mongoose');
+var db = mongoose.createConnection(settings.host, settings.db);
+var wish = require('wish');
+var cat = require('cat');
+var autoinc = require('mongoose-id-autoinc');
+
+autoinc.init(db, userCounter);
+
+var userSchema = new mongoose.Schema(
+	userID: Number,
+	password: {
+		type: String,
+		required: true
+	},
+	meta: {
+		email: {
+			type: String,
+			required: true
+		},
+		nickname: {
+			type: String,
+			required: true
+		},
+		realname: String,
+		birthday: Date,
+		address: String,
+		favcat: [Number],
+		avatar: String
+	},
+	follow: [Number],
+	ownwish: [Number],
+	orderwish: [Number]
+);
+
+var userModel = mongoose.model('User', userSchema);
+
+userSchema.plugin(autoinc.plugin, {
+	model: 'userModel',
+	field: 'seqnumber',
+	start: 1,
+	step: 1
+});
+
+
+
+function User(user) {
+  this.password = user.password;
+  this.meta.email = user.meta.email;
+  this.meta.nickname = user.meta.nickname;
+  this.meta.realname = user.meta.realname;
+  this.meta.birthday = user.meta.birthday;
+  this.meta.address = user.meta.address;
+  this.meta.favcat = user.meta.favcat;
+};
+
+User.prototype.save = function(callback) {
+	var user = {
+	};
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module.exports = User;
+

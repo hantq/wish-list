@@ -18,13 +18,14 @@ var wishSchema = new mongoose.Schema({
             type: Date,
             default: Date.now()
         },
+        completedate: Date,
         deadline: Date,
         location: String,
         priority:{
             type: Number,
             default: 0  // 0 normal, 1 important
         },
-        cat: [Number]
+        tag: [Number]
     },
     authority: {
         type: Number,

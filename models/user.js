@@ -9,8 +9,7 @@ var userSchema = new mongoose.Schema({
     userID: Number,
     password: {
         type: String,
-        required: true,
-        set: Data.prototype.md5
+        required: true
     },
     meta: {
         email: {
@@ -25,7 +24,7 @@ var userSchema = new mongoose.Schema({
         realname: String,
         birthday: Date,
         address: String,
-        favcat: [Number],
+        favtag: [Number],
         avatar: String
     },
     follow: [Number],

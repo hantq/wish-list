@@ -5,16 +5,16 @@ var autoinc = require('mongoose-id-autoinc');
 
 autoinc.init(db, catCounter);
 
-var catSchema = new mongoose.Schema({
-    catID: Number,
+var tagSchema = new mongoose.Schema({
+    tagID: Number,
     name: String
 });
 
-var Cat = mongoose.model('Cat', catSchema);
+var Tag = mongoose.model('Tag', tagSchema);
 
-catSchema.plugin(autoinc.plugin, {
-    model: 'Cat',
-    field: 'catID'
+tagSchema.plugin(autoinc.plugin, {
+    model: 'Tag',
+    field: 'tagID'
 });
 
-module.exports = Cat;
+module.exports = Tag;

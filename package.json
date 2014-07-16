@@ -1,18 +1,19 @@
 {
   "name": "WishList",
   "version": "0.0.1",
+  "description": "A simple app for fulfilling everyone's wish.",
   "private": true,
   "scripts": {
+    "test" : "mocha",
     "start": "node app.js"
   },
   "dependencies": {
     "express": "3.13.0",
-    "ejs": "*",
-	"mongodb": "*",
 	"connect-mongo": "*",
-	"connect-flash": "*",
 	"mongoose": "*",
 	"mongoose-id-autoinc": "*",
-    "async": "*"
+    "async": "*",
+    "mocha": "*",
+    "supertest": "*"
   }
 }

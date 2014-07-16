@@ -1,3 +1,3 @@
-/**
- * Created by hantq on 2014/7/16.
- */
+var request = require('supertest');
+var express = require('express');
+var app = require('../app');

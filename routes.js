@@ -171,6 +171,7 @@ module.exports = function(app) {
             wish.meta.addeddate = req.body.meta.addeddate;
             wish.meta.completedate = req.body.meta.completedate;
             wish.meta.deadline = req.body.meta.deadline;
+            wish.meta.link = req.body.meta.link;
             wish.meta.location = req.body.meta.location;
             wish.meta.priority = req.body.meta.priority;
             wish.meta.tag = req.body.meta.tag;

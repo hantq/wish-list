@@ -20,6 +20,7 @@ var wishSchema = new mongoose.Schema({
         },
         completedate: Date,
         deadline: Date,
+        link: String,
         location: String,
         priority:{
             type: Number,

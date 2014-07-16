@@ -22,15 +22,18 @@ var wishSchema = new mongoose.Schema({
         location: String,
         priority:{
             type: Number,
-            default: 1
+            default: 0  // 0 normal, 1 important
         },
         cat: [Number]
     },
     authority: {
         type: Number,
-        default: 1
+        default: 0  // 0 for all, 1 for follow, 2 for private
     },
-    ordered: Number,
+    ordered: {
+        type: Number,
+        default: 0
+    },
     completed: {
         type: Boolean,
         default: false

@@ -55,7 +55,6 @@ app.get('/api/wish/:id', function(req, res) {
 	Wish.findOne({wishID: req.params.id}, function(err, wish) {
         if(err)
             res.send(err);
-        console.log(wish);
         res.json(wish);
 	});
 });
@@ -65,7 +64,6 @@ app.get('/api/user/:id', function(req, res) {
     User.findOne({userID: req.params.id}, function(err, user) {
 		if(err)
             res.send(err);
-        console.log(user);
         res.json(user);
 	});
 });
@@ -96,7 +94,7 @@ app.get('/api/user/:id/orderwish', function(req, res) {
     });
 });
 
-// create an user
+// create an user, sign up
 app.post('/api/user', function(req, res){
     var newUser = new User(req.body);
     newUser.save(function (err) {
@@ -104,6 +102,11 @@ app.post('/api/user', function(req, res){
             res.send(err);
     });
     res.json(newUser);
+});
+
+// sign in
+app.post('/api/signin', function(req, res) {
+
 });
 
 // create an wish
@@ -118,9 +121,6 @@ app.post('/api/wish', function(req, res){
 
 // update an user
 app.put('/api/user/:id', function(req, res){
-    User.findOneAndUpdate({userID: req.params.id}, {$set: {
-		password: 
-	}});
 });
 
 // update a wish
@@ -185,8 +185,6 @@ app.get('/api/user/:id/follow/ownwish', function(req, res){
             if(err)
                 res.send(err);
             Wish.find({"$where": function(){
-                for(var person in users) {
-                }
             }});
         });
     });

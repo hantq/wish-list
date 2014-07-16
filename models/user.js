@@ -3,7 +3,7 @@ var mongoose = require('mongoose');
 var db = mongoose.createConnection(settings.host, settings.db);
 var autoinc = require('mongoose-id-autoinc');
 
-autoinc.init(db, userCounter);
+autoinc.init(db);
 
 var userSchema = new mongoose.Schema({
     userID: Number,

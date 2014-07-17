@@ -1,6 +1,10 @@
-var settings = require('../settings');
 var mongoose = require('mongoose');
-var db = mongoose.createConnection(settings.host, settings.db);
+var db = mongoose.connect('mongodb://localhost/WishList' , function(err){
+    if(err)
+        console.log(err);
+    else
+        console.log("DB Starts!");
+});
 var autoinc = require('mongoose-id-autoinc');
 
 autoinc.init(db);
@@ -21,22 +25,34 @@ var userSchema = new mongoose.Schema({
             type: String,
             required: true
         },
-        realname: String,
-        birthday: Date,
-        address: String,
-        favtag: [Number],
-        avatar: String
+        realname: {
+            type: String,
+            default: ''
+        },
+        avatar: {
+            type: String,
+            default: ''
+        },
+        birthday: {
+            type: String,
+            default: ''
+        },
+        address: {
+            type: String,
+            default: ''
+        },
+        favtag: [Number]
     },
     follow: [Number],
     ownwish: [Number],
     orderwish: [Number]
 });
 
-var User = mongoose.model('User', userSchema);
-
 userSchema.plugin(autoinc.plugin, {
-	model: 'User',
-	field: 'userID'
+    model: 'User',
+    field: 'userID'
 });
+
+var User = mongoose.model('User', userSchema);
 
 module.exports = User;

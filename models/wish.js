@@ -1,9 +1,13 @@
-var settings = require('../settings');
 var mongoose = require('mongoose');
-var db = mongoose.createConnection(settings.host, settings.db);
+/*var db = mongoose.connect('mongodb://localhost/WishList' , function(err){
+    if(err)
+        console.log(err);
+    else
+        console.log("DB Starts!");
+});*/
 var autoinc = require('mongoose-id-autoinc');
 
-autoinc.init(db);
+//autoinc.init(db);
 
 var wishSchema = new mongoose.Schema({
     wishID: Number,
@@ -13,20 +17,39 @@ var wishSchema = new mongoose.Schema({
             type: String,
             required: true
         },
-        pic: String,
-        addeddate: {
-            type: Date,
-            default: Date.now()
+        describe: {
+            type: String,
+            default: ''
         },
-        completedate: Date,
-        deadline: Date,
-        link: String,
-        location: String,
+        pic: {
+            type: String,
+            default: ''
+        },
+        addeddate: {
+            type: String,
+            default: ''
+        },
+        completedate: {
+            type: String,
+            default: ''
+        },
+        deadline: {
+            type: String,
+            default: ''
+        },
+        link: {
+            type: String,
+            default: ''
+        },
+        location: {
+            type: String,
+            default: ''
+        },
         priority:{
             type: Number,
             default: 0  // 0 normal, 1 important
         },
-        tag: [Number]
+        tag: [String]
     },
     authority: {
         type: Number,
@@ -42,11 +65,11 @@ var wishSchema = new mongoose.Schema({
     }
 });
 
-var Wish = mongoose.model('Wish', wishSchema);
-
 wishSchema.plugin(autoinc.plugin, {
     model: 'Wish',
     field: 'wishID'
 });
+
+var Wish = mongoose.model('Wish', wishSchema);
 
 module.exports = Wish;

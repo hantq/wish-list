@@ -1,20 +1,24 @@
-var settings = require('../settings');
 var mongoose = require('mongoose');
-var db = mongoose.createConnection(settings.host, settings.db);
+/*var db = mongoose.connect('mongodb://localhost/WishList' , function(err){
+    if(err)
+        console.log(err);
+    else
+        console.log("DB Starts!");
+});*/
 var autoinc = require('mongoose-id-autoinc');
 
-autoinc.init(db);
+//autoinc.init(db);
 
 var tagSchema = new mongoose.Schema({
     tagID: Number,
     name: String
 });
 
-var Tag = mongoose.model('Tag', tagSchema);
-
 tagSchema.plugin(autoinc.plugin, {
     model: 'Tag',
     field: 'tagID'
 });
+
+var Tag = mongoose.model('Tag', tagSchema);
 
 module.exports = Tag;

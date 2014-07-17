@@ -4,7 +4,8 @@
   "description": "A simple app for fulfilling everyone's wish.",
   "private": true,
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "test":  "mocha"
   },
   "dependencies": {
     "express": "3.13.0",
@@ -12,7 +13,7 @@
     "mongoose": "*",
     "mongoose-id-autoinc": "*",
     "async": "*",
-    "multiparty": "*",
+    "multiparty": "3.2.3",
     "mocha": "*",
     "supertest": "*"
   }

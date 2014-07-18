@@ -1,7 +1,7 @@
 {
   "name": "WishList",
-  "version": "0.0.1",
-  "description": "A simple app for fulfilling everyone's wish.",
+  "version": "0.1.0",
+  "description": "A demo app for fulfilling everyone's wish.",
   "private": true,
   "scripts": {
     "start": "node app.js",
@@ -15,7 +15,6 @@
     "async": "*",
     "multiparty": "3.2.3",
     "mocha": "*",
-    "supertest": "*",
-    "jpegorientation": "*"
+    "supertest": "*"
   }
 }

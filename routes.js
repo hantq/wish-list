@@ -210,7 +210,6 @@ exports.getAUserSet = function(req, res) {
                     if(err)
                         res.send(err);
                     else {
-                        console.log("WishSet Ownwishes: " + ownwishes);
                         Wish.find({wishID: {$in: user.orderwish}}).sort({'meta.addeddate': -1}).exec(function(err, orderwishes) {
                             if(err)
                                 res.send(err);
@@ -242,7 +241,6 @@ exports.getAUserSet = function(req, res) {
             else if (!user)
                 res.send('找不到这个用户');
             else {
-                console.log(user.ownwish);
                 var ownwisharray = [];
                 Wish.find({wishID: {$in: user.ownwish}}, function(err, ownwishes){
                     if(err)
@@ -353,11 +351,9 @@ exports.addAWish = function(req, res) {
                                     if(err)
                                         res.send(err);
                                     else {
-                                        console.log("in user save newwish: "+newWish);
                                         var tmp = {
                                             wishID: newWish.wishID
                                         };
-                                        console.log("in user save tmp: "+tmp);
                                         res.send(tmp);
                                     }
                                 });
@@ -400,11 +396,9 @@ exports.addAWish = function(req, res) {
                             if(err)
                                 res.send(err);
                             else {
-                                console.log("in user save newwish: "+newWish);
                                 var tmp = {
                                     wishID: newWish.wishID
                                 };
-                                console.log("in user save tmp: "+tmp);
                                 res.send(tmp);
                             }
                         });
@@ -512,7 +506,6 @@ exports.deleteWish = function(req, res) {
         if(err)
             res.send(err);
         else
-            console.log("愿望已被删除");
             res.send("愿望已被删除");
     });
 };
@@ -577,8 +570,6 @@ exports.getfollowuser = function(req, res) {
 exports.getfollowuserwish = function(req, res) {
     var wisharray = [];
     var wishset = {};
-    console.log("enter getfollowuserwish: " + req.params.id);
-    console.log("session: " + req.session.user);
     User.findOne({userID: req.params.id}, function(err, user) {
         if(err)
             res.send(err);
@@ -596,6 +587,9 @@ exports.getfollowuserwish = function(req, res) {
                             Wish.find({wishID: {$in: following.ownwish}}, function(err, wishes){
                                 if(err)
                                     res.send(err);
+                                else if(wishes.length == 0) {
+                                    callback();
+                                }
                                 else if(wishes.length > 0) {
                                     console.log(wishes);
                                     async.eachSeries(wishes, function(wish, callback) {

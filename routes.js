@@ -491,6 +491,8 @@ exports.getfollowuser = function(req, res) {
 };
 
 exports.getfollowuserwish = function(req, res) {
+    var wisharray = [];
+    var wishset = {};
     User.findOne({userID: req.params.id}, function(err, user) {
         if(err)
             res.send(err);
@@ -500,50 +502,52 @@ exports.getfollowuserwish = function(req, res) {
             User.find({userID: {$in: user.follow}}, function(err, users) {
                 if(err)
                     res.send(err);
-                else if(!users)
-                    res.send("没有关注的用户");
+                else if(users.length == 0 || !users)
+                    res.send(wisharray);
                 else {
-                    Wish.find();
-
-                    Wish.find({"$where": function() {
-                        var wisharray = [];
-                        var wishset = {};
+ //                   Wish.find({"$where": function() {
                         async.eachSeries(users, function(following, callback) {
-                            Wish.findOne({wishID: {$in: following.ownwish}}, function(err, w){
+                            Wish.find({wishID: {$in: following.ownwish}}, function(err, wishes){
                                 if(err)
                                     res.send(err);
-                                else if(w.authority == 0) {
-                                    Tag.find({tagID: {$in: w.meta.tag}}, function(err, tags) {
-                                        if(err)
-                                            res.send(err);
-                                        else {
-                                            wishset = {
-                                                wish: w,
-                                                owner: following,
-                                                tag: tags
-                                            };
-                                            wisharray.push(wishset);
-                                        }
-                                    });
-                                } else if(w.authority == 1) {
-                                    // following follow user
-                                    User.findOne({userID: following.follow}, function(err, u) {
-                                        if(err)
-                                            res.send(err);
-                                        else if(u) {
-                                            Tag.find({tagID: {$in: w.meta.tag}}, function(err, tags) {
+                                else if(wishes.length > 0) {
+                                    async.eachSeries(wishes, function(wish, callback) {
+                                        if(wish.authority == 0) {
+                                            Tag.find({tagID: {$in: wish.meta.tag}}, function(err, tags) {
                                                 if(err)
                                                     res.send(err);
                                                 else {
                                                     wishset = {
-                                                        wish: w,
+                                                        wish: wish,
                                                         owner: following,
                                                         tag: tags
                                                     };
                                                     wisharray.push(wishset);
+                                                    callback();
                                                 }
                                             });
+                                        } else if(wish.authority == 1) {
+                                            // following follows user
+                                            if (following.follow.indexOf(user.userID) > -1) {
+                                                Tag.find({tagID: {$in: wish.meta.tag}}, function (err, tags) {
+                                                    if (err)
+                                                        res.send(err);
+                                                    else {
+                                                        wishset = {
+                                                            wish: wish,
+                                                            owner: following,
+                                                            tag: tags
+                                                        };
+                                                        wisharray.push(wishset);
+                                                        callback();
+                                                    }
+                                                });
+                                            }
                                         }
+                                    }, function(err) {
+                                        if(err)
+                                            res.send(err);
+                                        callback();
                                     });
                                 }
                             });
@@ -552,20 +556,15 @@ exports.getfollowuserwish = function(req, res) {
                                 res.send(err);
                             else {
                                 wisharray.sort(function(a, b) {
-                                    return a.meta.addeddate < b.meta.addeddate ? 1 : -1;
+                                    return a.wish.wishID < b.wish.wishID ? 1 : -1;
                                 });
                                 console.log(wisharray);
                                 res.send(wisharray);
                             }
                         });
-                    }});
-
-
-
+ //                   }});
                 }
            });
-
-
         }
     });
 };

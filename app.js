@@ -7,6 +7,7 @@ var settings = require('./settings');
 
 var app = express();
 
+// 解决跨域请求问题
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
@@ -42,10 +43,7 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-
 // routes
-app.get('/', routes.index);
-
 app.post('/api/signup', checkNotLogin);
 app.post('/api/signup', routes.signup);
 
@@ -55,28 +53,37 @@ app.post('/api/signin', routes.signin);
 app.get('/api/logout', checkLogin);
 app.get('/api/logout', routes.signout);
 
-app.get('/api/wish/:id', routes.getAWishSet);
-app.get('/api/user/:id', routes.getAUserSet);
+app.get('/api/wish/:id', checkLogin);
+app.get('/api/wish/:id', routes.getAWishSet);  // return wishset
+app.get('/api/user/:id', checkLogin);
+app.get('/api/user/:id', routes.getAUserSet);  // return userset
 
-app.post('/api/wish', routes.addAWish);
+app.post('/api/wish', checkLogin);
+app.post('/api/wish', routes.addAWish);  // return wish
 
 app.put('/api/user/:id', checkLogin);
-app.put('/api/user/:id', routes.updateUser);
-app.put('/api/wish/:id', routes.updateWish);
+app.put('/api/user/:id', routes.updateUser);  // return user
+app.put('/api/wish/:id', checkLogin);
+app.put('/api/wish/:id', routes.updateWish);  // return wish
 
+app.delete('/api/wish/:id', checkLogin);
 app.delete('/api/wish/:id', routes.deleteWish);
 
-app.get('/api/everyonewish', routes.everyoneWish);
-app.get('/api/user/:id/followuser', routes.getfollowuser);
-app.get('/api/user/:id/followuserwish', routes.getfollowuserwish);
+app.get('/api/everyonewish', routes.everyoneWish);  // return [wishset]
+app.get('/api/user/:id/followuser', checkLogin);
+app.get('/api/user/:id/followuser', routes.getfollowuser);  // return [user]
+app.get('/api/user/:id/followuserwish', checkLogin);
+app.get('/api/user/:id/followuserwish', routes.getfollowuserwish);  // return [wishset]
 
+app.post('/api/upload', checkLogin);
 app.post('/api/upload', routes.upload);
 
+app.post('/api/fulfill/:userid/:wishid', checkLogin);
 app.post('/api/fulfill/:userid/:wishid', routes.fulfill);
+app.post('/api/collect/:userid/:wishid', checkLogin);
 app.post('/api/collect/:userid/:wishid', routes.collect);
 
-// search
-// app.get();
+app.get('/api/search', routes.search);
 
 http.createServer(app).listen(app.get('port'), function(){
     console.log('Express server listening on port ' + app.get('port'));

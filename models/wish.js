@@ -1,13 +1,5 @@
 var mongoose = require('mongoose');
-/*var db = mongoose.connect('mongodb://localhost/WishList' , function(err){
-    if(err)
-        console.log(err);
-    else
-        console.log("DB Starts!");
-});*/
 var autoinc = require('mongoose-id-autoinc');
-
-//autoinc.init(db);
 
 var wishSchema = new mongoose.Schema({
     wishID: Number,
@@ -27,7 +19,7 @@ var wishSchema = new mongoose.Schema({
         },
         addeddate: {
             type: String,
-            default: ''
+            default: new Date().toISOString().slice(0,10)
         },
         completedate: {
             type: String,

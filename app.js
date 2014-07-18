@@ -55,8 +55,8 @@ app.get('/api/logout', routes.signout);
 
 app.get('/api/wish/:id', checkLogin);
 app.get('/api/wish/:id', routes.getAWishSet);  // return wishset
-app.get('/api/user/:id', checkLogin);
-app.get('/api/user/:id', routes.getAUserSet);  // return userset
+app.get('/api/user/:mid/:uid', checkLogin);
+app.get('/api/user/:mid/:uid', routes.getAUserSet);  // return userset
 
 //app.post('/api/wish', checkLogin);
 app.post('/api/wish', routes.addAWish);  // return wish
@@ -76,10 +76,10 @@ app.post('/api/followquery', routes.follow);
 app.post('/api/unfollowquery', checkLogin);
 app.post('/api/unfollowquery', routes.unfollow);
 
-app.get('/api/user/:id/followuser', checkLogin);
-app.get('/api/user/:id/followuser', routes.getfollowuser);  // return [user]
-app.get('/api/user/:id/followuserwish', checkLogin);
-app.get('/api/user/:id/followuserwish', routes.getfollowuserwish);  // return [wishset]
+app.get('/api/followuser/:id', checkLogin);
+app.get('/api/followuser/:id', routes.getfollowuser);  // return [user]
+app.get('/api/followuserwish/:id', checkLogin);
+app.get('/api/followuserwish/:id', routes.getfollowuserwish);  // return [wishset]
 
 app.post('/api/upload', checkLogin);
 app.post('/api/upload', routes.upload);

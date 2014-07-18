@@ -84,12 +84,19 @@ app.get('/api/user/:id/followuserwish', routes.getfollowuserwish);  // return [w
 app.post('/api/upload', checkLogin);
 app.post('/api/upload', routes.upload);
 
-app.post('/api/fulfill/:userid/:wishid', checkLogin);
-app.post('/api/fulfill/:userid/:wishid', routes.fulfill);
-app.post('/api/collect/:userid/:wishid', checkLogin);
-app.post('/api/collect/:userid/:wishid', routes.collect);
+app.post('/api/fulfill', checkLogin);
+app.post('/api/fulfill', routes.fulfill);
+app.post('/api/unfulfill', checkLogin);
+app.post('/api/unfulfill', routes.fulfill);
+app.post('/api/collect', checkLogin);
+app.post('/api/collect', routes.collect);
+app.post('/api/complete', checkLogin);
+app.post('/api/complete', routes.complete);
 
 app.get('/api/search', routes.search);
+
+app.get('/api/orderwish/:id', checkLogin);
+app.get('/api/orderwish/:id', routes.orderwishlist);
 
 http.createServer(app).listen(app.get('port'), function(){
     console.log('Express server listening on port ' + app.get('port'));

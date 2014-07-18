@@ -434,7 +434,7 @@ exports.deleteWish = function(req, res) {
 };
 
 exports.everyoneWish = function(req, res) {
-    Wish.find({authority: 0}).sort({'wishID': -1}).limit(10).exec(function(err, wishes) {
+    Wish.find({authority: 0, completed: false}).sort({'wishID': -1}).limit(10).exec(function(err, wishes) {
         if(err)
             res.send(err);
         else {
@@ -496,35 +496,23 @@ exports.getfollowuserwish = function(req, res) {
             res.send(err);
         if(!user)
             res.send('找不到用户');
-        User.find({userID: {$in: user.follow}}, function(err, users) {
-            if(err)
-                res.send(err);
-            Wish.find({"$where": function() {
-                var wisharray = [];
-                var wishset = {};
-                async.eachSeries(users, function(following, callback) {
-                    Wish.findOne({wishID: {$in: following.ownwish}}, function(err, w){
-                        if(err)
-                            res.send(err);
-                        else if(w.authority == 0) {
-                            Tag.find({tagID: {$in: w.meta.tag}}, function(err, tags) {
+        else {
+            User.find({userID: {$in: user.follow}}, function(err, users) {
+                if(err)
+                    res.send(err);
+                else if(!users)
+                    res.send("没有关注的用户");
+                else {
+                    Wish.find();
+
+                    Wish.find({"$where": function() {
+                        var wisharray = [];
+                        var wishset = {};
+                        async.eachSeries(users, function(following, callback) {
+                            Wish.findOne({wishID: {$in: following.ownwish}}, function(err, w){
                                 if(err)
                                     res.send(err);
-                                else {
-                                    wishset = {
-                                        wish: w,
-                                        owner: following,
-                                        tag: tags
-                                    };
-                                    wisharray.push(wishset);
-                                }
-                            });
-                        } else if(w.authority == 1) {
-                            // following follow user
-                            User.findOne({userID: following.follow}, function(err, u) {
-                                if(err)
-                                    res.send(err);
-                                else if(u) {
+                                else if(w.authority == 0) {
                                     Tag.find({tagID: {$in: w.meta.tag}}, function(err, tags) {
                                         if(err)
                                             res.send(err);
@@ -537,23 +525,48 @@ exports.getfollowuserwish = function(req, res) {
                                             wisharray.push(wishset);
                                         }
                                     });
+                                } else if(w.authority == 1) {
+                                    // following follow user
+                                    User.findOne({userID: following.follow}, function(err, u) {
+                                        if(err)
+                                            res.send(err);
+                                        else if(u) {
+                                            Tag.find({tagID: {$in: w.meta.tag}}, function(err, tags) {
+                                                if(err)
+                                                    res.send(err);
+                                                else {
+                                                    wishset = {
+                                                        wish: w,
+                                                        owner: following,
+                                                        tag: tags
+                                                    };
+                                                    wisharray.push(wishset);
+                                                }
+                                            });
+                                        }
+                                    });
                                 }
                             });
-                        }
-                    });
-                }, function(err) {
-                    if(err)
-                        res.send(err);
-                    else {
-                        wisharray.sort(function(a, b) {
-                            return a.meta.addeddate < b.meta.addeddate ? 1 : -1;
+                        }, function(err) {
+                            if(err)
+                                res.send(err);
+                            else {
+                                wisharray.sort(function(a, b) {
+                                    return a.meta.addeddate < b.meta.addeddate ? 1 : -1;
+                                });
+                                console.log(wisharray);
+                                res.send(wisharray);
+                            }
                         });
-                        console.log(wisharray);
-                        res.send(wisharray);
-                    }
-                });
-            }});
-        });
+                    }});
+
+
+
+                }
+           });
+
+
+        }
     });
 };
 
@@ -582,24 +595,88 @@ exports.upload = function(req, res) {
     form.parse(req);
 };
 
+exports.complete = function(req, res) {
+    var wishid = req.body.wid;
+    Wish.findOne({wishID: wishid}, function(err, wish) {
+        if(err)
+            res.send(err);
+        else if(!wish)
+            res.send("找不到愿望");
+        else {
+            wish.completed = true;
+            console.log("wiw" + wish.completed);
+            wish.meta.completedate = new Date().toISOString().slice(0,10);
+            wish.save(function(err) {
+                if(err)
+                    res.send(err);
+                else {
+                    console.log(wish);
+                    res.send(wish);
+                }
+            });
+        }
+    });
+};
+
 exports.fulfill = function(req, res) {
-    var userid = req.params.userid,
-        wishid = req.params.wishid;
-    User.findOne({userID: userid}, function(err, user) {
-        //判断是否已存在
-        Wish.findOne({wishID: {$in: user.orderwish}}, function(err, wish) {
+    var myid = req.body.mid,
+        wishid = req.body.wid;
+    Wish.findOne({wishID: wishid}, function(err, wish) {
+        if(err)
+            res.send(err);
+        else if(!wish)
+            res.send("没找到wish");
+        else {
+            wish.ordered = myid;
+            wish.save(function(err) {
+                if(err)
+                    res.send(err);
+                else {
+                    User.findOne({userID: myid}, function(err, me) {
+                        if(err)
+                            res.send(err);
+                        else if(!me)
+                            res.send("找不到用户");
+                        else {
+                            me.orderwish.push(wishid);
+                            me.save(function(err) {
+                                if(err)
+                                    res.send(err);
+                                else {
+                                    res.send("已预订");
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    });
+};
+
+exports.unfulfill = function(req, res) {
+    var myid = req.body.mid,
+        wishid = req.body.wid;
+    Wish.findOne({wishID: wishid}, function(err, wish) {
+        wish.ordered = 0;
+        wish.save(function(err) {
             if(err)
                 res.send(err);
-            else if(wish)
-                res.send('愿望已在实现列表中');
             else {
-                user.orderwish.push(wishid);
-                user.save(function(err) {
+                User.findOne({userID: myid}, function(err, me) {
                     if(err)
                         res.send(err);
+                    else if(!me)
+                        res.send("找不到用户");
                     else {
-                        console.log(user);
-                        res.send(user);
+                        me.orderwish.remove(wishid);
+                        me.save(function(err) {
+                            if(err)
+                                res.send(err);
+                            else {
+                                res.send("已取消预订");
+                            }
+                        });
                     }
                 });
             }
@@ -607,9 +684,58 @@ exports.fulfill = function(req, res) {
     });
 };
 
+exports.orderwishlist = function(req, res) {
+    var userid = req.body.uid;
+    User.findOne({userID: userid}, function(err, user) {
+        if(err)
+            res.send(err);
+        else if(!user)
+            res.send("找不到用户");
+        else {
+            var wisharray = [];
+            Wish.find({wishID: {$in: user.orderwish}}, function(err, wishes) {
+                if(err)
+                    res.send(err);
+                else if(!wishes)
+                    res.send("找不到愿望");
+                else {
+                    async.eachSeries(wishes, function(wish, callback) {
+                        User.findOne({userID: wish.owner}, function(err, owner) {
+                            if(err)
+                                res.send(err);
+                            else {
+                                Tag.find({tagID: {$in: wish.meta.tag}}, function(err, tags) {
+                                    if(err)
+                                        res.send(err);
+                                    else {
+                                        var wishset = {
+                                            wish : wish,
+                                            owner: owner,
+                                            tag  : tags
+                                        };
+                                        wisharray.push(wishset);
+                                        callback();
+                                    }
+                                });
+                            }
+                        });
+                    }, function(err) {
+                        if(err)
+                            res.send(err);
+                        else {
+                            console.log(wisharray);
+                            res.send(wisharray);
+                        }
+                    });
+                }
+            });
+        }
+    });
+};
+
 exports.collect = function(req, res) {
-    var userid = req.params.userid,
-        wishid = req.params.wishid;
+    var userid = req.body.uid,
+        wishid = req.body.wid;
     Wish.findOne({wishID: wishid}, function(err, wish) {
         var newWish = new Wish(wish);
         newWish.owner = userid;

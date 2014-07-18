@@ -15,6 +15,7 @@
     "async": "*",
     "multiparty": "3.2.3",
     "mocha": "*",
-    "supertest": "*"
+    "supertest": "*",
+    "jpegorientation": "*"
   }
 }

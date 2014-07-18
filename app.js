@@ -87,7 +87,7 @@ app.post('/api/upload', routes.upload);
 app.post('/api/fulfill', checkLogin);
 app.post('/api/fulfill', routes.fulfill);
 app.post('/api/unfulfill', checkLogin);
-app.post('/api/unfulfill', routes.fulfill);
+app.post('/api/unfulfill', routes.unfulfill);
 app.post('/api/collect', checkLogin);
 app.post('/api/collect', routes.collect);
 app.post('/api/complete', checkLogin);

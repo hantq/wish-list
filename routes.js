@@ -196,42 +196,98 @@ exports.getAWishSet = function(req, res) {
 };
 
 exports.getAUserSet = function(req, res) {
-    User.findOne({userID: req.params.id}, function(err, user) {
-        if(err)
-            res.send(err);
-        else if(!user)
-            res.send('找不到这个用户');
-        else {
-              console.log(user.ownwish);
-               Wish.find({wishID: {$in: user.ownwish}}).sort({'meta.addeddate': -1}).exec(function(err, ownwishes) {
-                if(err)
-                    res.send(err);
-                else {
-                    console.log("WishSet Ownwishes: " + ownwishes);
-                    Wish.find({wishID: {$in: user.orderwish}}).sort({'meta.completedate': -1}).exec(function(err, orderwishes) {
-                         if(err)
-                            res.send(err);
-                        else {
-                            Tag.find({tagID: {$in: user.meta.favtag}}, function(err, tags) {
-                                if(err)
-                                    res.send(err);
-                                else {
-                                    var userset = {
-                                        user:          user,
-                                        ownwishlist:   ownwishes,
-                                        orderwishlist: orderwishes,
-                                        favtag:        tags
-                                    };
-                                    console.log(userset);
-                                    res.send(userset);
+    var meid = req.params.mid,
+        youid = req.params.uid;
+    if(meid === youid) {
+        User.findOne({userID: youid}, function(err, user) {
+            if(err)
+                res.send(err);
+            else if(!user)
+                res.send('找不到这个用户');
+            else {
+                console.log(user.ownwish);
+                Wish.find({wishID: {$in: user.ownwish}}).sort({'meta.addeddate': -1}).exec(function(err, ownwishes) {
+                    if(err)
+                        res.send(err);
+                    else {
+                        console.log("WishSet Ownwishes: " + ownwishes);
+                        Wish.find({wishID: {$in: user.orderwish}}).sort({'meta.addeddate': -1}).exec(function(err, orderwishes) {
+                            if(err)
+                                res.send(err);
+                            else {
+                                Tag.find({tagID: {$in: user.meta.favtag}}, function(err, tags) {
+                                    if(err)
+                                        res.send(err);
+                                    else {
+                                        var userset = {
+                                            user:          user,
+                                            ownwishlist:   ownwishes,
+                                            orderwishlist: orderwishes,
+                                            favtag:        tags
+                                        };
+                                        console.log(userset);
+                                        res.send(userset);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    } else {
+        User.findOne({userID: youid}, function(err, user) {
+            if (err)
+                res.send(err);
+            else if (!user)
+                res.send('找不到这个用户');
+            else {
+                console.log(user.ownwish);
+                var ownwisharray = [];
+                Wish.find({wishID: {$in: user.ownwish}}, function(err, ownwishes){
+                    if(err)
+                        res.send(err);
+                    else if(ownwishes.length == 0) {
+                        var userset = {
+                            user:          user,
+                            ownwishlist:   []
+                        };
+                        res.send(userset);
+                    }
+                    else {
+                        async.eachSeries(ownwishes, function(ownwish, callback) {
+                            if(ownwish.authority == 0) {
+                                ownwisharray.push(ownwish);
+                                callback();
+                            }
+                            else if(ownwish.authority == 1) {
+                                if(user.follow.indexOf(meid) > -1) {
+                                    ownwisharray.push(ownwish);
                                 }
-                            });
-                        }
-                    });
-                }
-            });
-        }
-    });
+                                callback();
+                            }
+                            else {
+                                callback();
+                            }
+                        }, function(err) {
+                            if(err)
+                                res.send(err);
+                            else {
+                                ownwisharray.sort(function(a, b) {
+                                    return a.wishID < b.wishID ? 1 : -1;
+                                });
+                                var userset = {
+                                    user:          user,
+                                    ownwishlist:   ownwisharray
+                                };
+                                res.send(userset);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
 };
 
 exports.addAWish = function(req, res) {
@@ -302,7 +358,7 @@ exports.addAWish = function(req, res) {
                                             wishID: newWish.wishID
                                         };
                                         console.log("in user save tmp: "+tmp);
-                                        res.json(tmp);
+                                        res.send(tmp);
                                     }
                                 });
                             }
@@ -349,7 +405,7 @@ exports.addAWish = function(req, res) {
                                     wishID: newWish.wishID
                                 };
                                 console.log("in user save tmp: "+tmp);
-                                res.json(tmp);
+                                res.send(tmp);
                             }
                         });
                     }
@@ -360,36 +416,63 @@ exports.addAWish = function(req, res) {
 };
 
 exports.updateUser = function(req, res) {
-         console.log(req.session.user);
-        var md5 = crypto.createHash('md5'),
-            password = md5.update(req.body.password).digest('hex');
-        User.findOne({userID: req.params.id}, function(err, user) {
-            if(err)
-                res.send(err);
-            else if(!user)
-                res.send('找不到这个用户');
-            else {
-                user.password = password;
-//                user.meta.email = req.body.meta.email;
-                user.meta.nickname = req.body.meta.nickname;
-                user.meta.realname = req.body.meta.realname;
-                user.meta.birthday = req.body.meta.birthday;
-                user.meta.address = req.body.meta.address;
-                user.meta.favtag = req.body.meta.favtag;
-                user.meta.avatar = req.body.meta.avatar;
-                user.follow = req.body.follow;
-                user.ownwish = req.body.ownwish;
-                user.orderwish = req.body.orderwish;
-                user.save(function(err) {
-                    if(err)
-                        res.send(err);
-                    else {
-                        console.log(user);
-                        res.send(user);
-                    }
-                });
-            }
-        });
+        console.log(req.body.password);
+        if(req.body.password) {
+            var md5 = crypto.createHash('md5'),
+                password = md5.update(req.body.password).digest('hex');
+            User.findOne({userID: req.params.id}, function(err, user) {
+                if(err)
+                    res.send(err);
+                else if(!user)
+                    res.send('找不到这个用户');
+                else {
+                    user.password = password;
+                    user.meta.nickname = req.body.meta.nickname;
+                    user.meta.realname = req.body.meta.realname;
+                    user.meta.birthday = req.body.meta.birthday;
+                    user.meta.address = req.body.meta.address;
+                    user.meta.favtag = req.body.meta.favtag;
+                    user.meta.avatar = req.body.meta.avatar;
+                    user.follow = req.body.follow;
+                    user.ownwish = req.body.ownwish;
+                    user.orderwish = req.body.orderwish;
+                    user.save(function(err) {
+                        if(err)
+                            res.send(err);
+                        else {
+                            console.log(user);
+                            res.send(user);
+                        }
+                    });
+                }
+            });
+        } else {
+            User.findOne({userID: req.params.id}, function(err, user) {
+                if(err)
+                    res.send(err);
+                else if(!user)
+                    res.send('找不到这个用户');
+                else {
+                    user.meta.nickname = req.body.meta.nickname;
+                    user.meta.realname = req.body.meta.realname;
+                    user.meta.birthday = req.body.meta.birthday;
+                    user.meta.address = req.body.meta.address;
+                    user.meta.favtag = req.body.meta.favtag;
+                    user.meta.avatar = req.body.meta.avatar;
+                    user.follow = req.body.follow;
+                    user.ownwish = req.body.ownwish;
+                    user.orderwish = req.body.orderwish;
+                    user.save(function(err) {
+                        if(err)
+                            res.send(err);
+                        else {
+                            console.log(user);
+                            res.send(user);
+                        }
+                    });
+                }
+            });
+        }
 };
 
 exports.updateWish = function(req, res) {
@@ -430,6 +513,7 @@ exports.deleteWish = function(req, res) {
             res.send(err);
         else
             console.log("愿望已被删除");
+            res.send("愿望已被删除");
     });
 };
 
@@ -493,6 +577,8 @@ exports.getfollowuser = function(req, res) {
 exports.getfollowuserwish = function(req, res) {
     var wisharray = [];
     var wishset = {};
+    console.log("enter getfollowuserwish: " + req.params.id);
+    console.log("session: " + req.session.user);
     User.findOne({userID: req.params.id}, function(err, user) {
         if(err)
             res.send(err);
@@ -505,12 +591,13 @@ exports.getfollowuserwish = function(req, res) {
                 else if(users.length == 0 || !users)
                     res.send(wisharray);
                 else {
- //                   Wish.find({"$where": function() {
+                        console.log("before async " + users);
                         async.eachSeries(users, function(following, callback) {
                             Wish.find({wishID: {$in: following.ownwish}}, function(err, wishes){
                                 if(err)
                                     res.send(err);
                                 else if(wishes.length > 0) {
+                                    console.log(wishes);
                                     async.eachSeries(wishes, function(wish, callback) {
                                         if(wish.authority == 0) {
                                             Tag.find({tagID: {$in: wish.meta.tag}}, function(err, tags) {
@@ -529,6 +616,7 @@ exports.getfollowuserwish = function(req, res) {
                                         } else if(wish.authority == 1) {
                                             // following follows user
                                             if (following.follow.indexOf(user.userID) > -1) {
+                                                console.log("following!!!!!!");
                                                 Tag.find({tagID: {$in: wish.meta.tag}}, function (err, tags) {
                                                     if (err)
                                                         res.send(err);
@@ -542,11 +630,16 @@ exports.getfollowuserwish = function(req, res) {
                                                         callback();
                                                     }
                                                 });
+                                            } else {
+                                                callback();
                                             }
+                                        } else {
+                                            callback();
                                         }
                                     }, function(err) {
                                         if(err)
                                             res.send(err);
+                                        console.log("inner async success");
                                         callback();
                                     });
                                 }
@@ -562,7 +655,6 @@ exports.getfollowuserwish = function(req, res) {
                                 res.send(wisharray);
                             }
                         });
- //                   }});
                 }
            });
         }
@@ -684,7 +776,7 @@ exports.unfulfill = function(req, res) {
 };
 
 exports.orderwishlist = function(req, res) {
-    var userid = req.body.uid;
+    var userid = req.params.id;
     User.findOne({userID: userid}, function(err, user) {
         if(err)
             res.send(err);
@@ -736,15 +828,45 @@ exports.collect = function(req, res) {
     var userid = req.body.uid,
         wishid = req.body.wid;
     Wish.findOne({wishID: wishid}, function(err, wish) {
-        var newWish = new Wish(wish);
-        newWish.owner = userid;
-        newWish.addeddate = new Date().toISOString().slice(0,10);
+        var newWish = new Wish({
+            meta: {
+                name: wish.meta.name,
+                describe: wish.meta.describe,
+                pic: wish.meta.pic,
+                addeddate: new Date().toISOString().slice(0,10),
+                completedate: wish.meta.completedate,
+                deadline: wish.meta.deadline,
+                link: wish.meta.link,
+                location: wish.meta.location,
+                priority: 0,
+                tag: wish.meta.tag
+            },
+            authority: 0,
+            ordered: 0,
+            completed: false,
+            owner: userid
+        });
         newWish.save(function(err) {
             if(err)
                 res.send(err);
             else {
-                console.log(newWish);
-                res.send(newWish);
+                User.findOne({userID: userid}, function(err, user) {
+                    if(err)
+                        res.send(err);
+                    else if(!user)
+                        res.send("找不到用户");
+                    else {
+                        user.ownwish.push(newWish.wishID);
+                        user.save(function(err) {
+                            if(err)
+                                res.send(err);
+                            else {
+                                console.log(newWish);
+                                res.send(newWish);
+                            }
+                        });
+                    }
+                });
             }
         });
     });

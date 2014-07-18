@@ -41,7 +41,7 @@ var userSchema = new mongoose.Schema({
             type: String,
             default: ''
         },
-        favtag: [String]
+        favtag: [Number]
     },
     follow: [Number],
     ownwish: [Number],

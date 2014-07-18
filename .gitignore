@@ -1,3 +1,4 @@
 .idea/
 public/usersUploads/images/
 uploads/tmp/
+node_modules/

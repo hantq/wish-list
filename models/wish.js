@@ -41,7 +41,7 @@ var wishSchema = new mongoose.Schema({
             type: Number,
             default: 0  // 0 normal, 1 important
         },
-        tag: [String]
+        tag: [Number]
     },
     authority: {
         type: Number,

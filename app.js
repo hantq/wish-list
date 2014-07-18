@@ -58,7 +58,7 @@ app.get('/api/wish/:id', routes.getAWishSet);  // return wishset
 app.get('/api/user/:id', checkLogin);
 app.get('/api/user/:id', routes.getAUserSet);  // return userset
 
-app.post('/api/wish', checkLogin);
+//app.post('/api/wish', checkLogin);
 app.post('/api/wish', routes.addAWish);  // return wish
 
 app.put('/api/user/:id', checkLogin);
@@ -70,6 +70,12 @@ app.delete('/api/wish/:id', checkLogin);
 app.delete('/api/wish/:id', routes.deleteWish);
 
 app.get('/api/everyonewish', routes.everyoneWish);  // return [wishset]
+
+app.post('/api/followquery', checkLogin);
+app.post('/api/followquery', routes.follow);
+app.post('/api/unfollowquery', checkLogin);
+app.post('/api/unfollowquery', routes.unfollow);
+
 app.get('/api/user/:id/followuser', checkLogin);
 app.get('/api/user/:id/followuser', routes.getfollowuser);  // return [user]
 app.get('/api/user/:id/followuserwish', checkLogin);

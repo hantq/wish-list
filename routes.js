@@ -6,6 +6,13 @@ var Tag = require('./models/tag');
 var fs = require('fs');
 var multiparty = require('multiparty');
 
+Array.prototype.remove = function(val) {
+    var index = this.indexOf(val);
+    if(index > -1) {
+        this.splice(index, 1);
+    }
+};
+
 exports.signup = function(req, res) {
     var md5 = crypto.createHash('md5'),
         password_md5 = md5.update(req.body.password).digest('hex');
@@ -57,6 +64,50 @@ exports.signin = function(req, res) {
 exports.signout = function(req, res) {
     req.session.user = null;
     res.send('已登出');
+};
+
+exports.follow = function(req, res) {
+    var user = req.body.uid,
+        follow = req.body.fid;
+    User.findOne({userID: user}, function(err, u) {
+        if(err)
+            res.send(err);
+        else if(!u)
+            res.send("找不到用户");
+        else {
+            u.follow.push(follow);
+            u.save(function(err) {
+                if(err)
+                    res.send(err);
+                else {
+                    console.log(u);
+                    res.send(u);
+                }
+            });
+        }
+    });
+};
+
+exports.unfollow = function(req, res) {
+    var user = req.body.uid,
+        unfollow = req.body.fid;
+    User.findOne({userID: user}, function(err, u) {
+        if(err)
+            res.send(err);
+        else if(!u)
+            res.send("找不到用户");
+        else {
+            u.follow.remove(unfollow);
+            u.save(function(err) {
+                if(err)
+                    res.send(err);
+                else {
+                    console.log(u);
+                    res.send(u);
+                }
+            });
+        }
+    });
 };
 
 exports.getAWishSet = function(req, res) {
@@ -184,29 +235,128 @@ exports.getAUserSet = function(req, res) {
 };
 
 exports.addAWish = function(req, res) {
-    var newWish = new Wish(req.body);
-    newWish.save(function(err) {
-        if(err)
-            res.send(err);
-        else {
-            console.log(newWish);
-            User.findOne({userID: newWish.owner}, function(err, user) {
+    if(req.body.meta.tag) {
+        var tagStringArray = req.body.meta.tag;
+        console.log(req.body.meta.tag);
+        var wishTags = [];
+        async.eachSeries(tagStringArray, function(tagString, callback){
+            Tag.findOne({name: tagString}, function(err, findtag){
                 if(err)
                     res.send(err);
-                else if(user) {
-                    user.ownwish.push(newWish.wishID);
-                    user.save(function(err) {
+                else if(findtag) {
+                    wishTags.push(findtag.tagID);
+                    callback();
+                } else {
+                    var newTag = new Tag({
+                        name: tagString
+                    });
+                    newTag.save(function(err){
                         if(err)
                             res.send(err);
                         else {
-                            console.log(user);
+                            console.log(newTag);
+                            wishTags.push(newTag.tagID);
+                            callback();
                         }
                     });
                 }
             });
-            res.send(newWish);
-        }
-    });
+        }, function(err) {
+            if(err)
+                res.send(err);
+            else {
+                var newWish = new Wish({
+                    meta: {
+                        name: req.body.meta.name,
+                        describe: req.body.meta.describe || '',
+                        pic: req.body.meta.pic || '',
+                        addeddate: new Date().toISOString().slice(0,10),
+                        completedate: req.body.meta.completedate || '',
+                        deadline: req.body.meta.deadline || '',
+                        link: req.body.meta.link || '',
+                        location: req.body.meta.location || '',
+                        priority: req.body.meta.priority || 0,
+                        tag: wishTags
+                    },
+                    authority: req.body.authority || 0,
+                    ordered: req.body.ordered || 0,
+                    completed: req.body.completed || false,
+                    owner: req.body.owner
+                });
+                newWish.save(function(err) {
+                    if(err)
+                        res.send(err);
+                    else {
+                        console.log(newWish);
+                        User.findOne({userID: newWish.owner}, function(err, user) {
+                            if(err)
+                                res.send(err);
+                            else if(user) {
+                                user.ownwish.push(newWish.wishID);
+                                user.save(function(err) {
+                                    if(err)
+                                        res.send(err);
+                                    else {
+                                        console.log("in user save newwish: "+newWish);
+                                        var tmp = {
+                                            wishID: newWish.wishID
+                                        };
+                                        console.log("in user save tmp: "+tmp);
+                                        res.json(tmp);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    } else {
+        var newWish = new Wish({
+            meta: {
+                name: req.body.meta.name,
+                describe: req.body.meta.describe || '',
+                pic: req.body.meta.pic || '',
+                addeddate: new Date().toISOString().slice(0,10),
+                completedate: req.body.meta.completedate || '',
+                deadline: req.body.meta.deadline || '',
+                link: req.body.meta.link || '',
+                location: req.body.meta.location || '',
+                priority: req.body.meta.priority || 0,
+                tag: []
+            },
+            authority: req.body.authority || 0,
+            ordered: req.body.ordered || 0,
+            completed: req.body.completed || false,
+            owner: req.body.owner
+        });
+        newWish.save(function(err) {
+            if(err)
+                res.send(err);
+            else {
+                console.log(newWish);
+                User.findOne({userID: newWish.owner}, function(err, user) {
+                    if(err)
+                        res.send(err);
+                    else if(user) {
+                        user.ownwish.push(newWish.wishID);
+                        user.save(function(err) {
+                            if(err)
+                                res.send(err);
+                            else {
+                                console.log("in user save newwish: "+newWish);
+                                var tmp = {
+                                    wishID: newWish.wishID
+                                };
+                                console.log("in user save tmp: "+tmp);
+                                res.json(tmp);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
 };
 
 exports.updateUser = function(req, res) {
@@ -220,7 +370,7 @@ exports.updateUser = function(req, res) {
                 res.send('找不到这个用户');
             else {
                 user.password = password;
-                user.meta.email = req.body.meta.email;
+//                user.meta.email = req.body.meta.email;
                 user.meta.nickname = req.body.meta.nickname;
                 user.meta.realname = req.body.meta.realname;
                 user.meta.birthday = req.body.meta.birthday;
@@ -332,6 +482,7 @@ exports.getfollowuser = function(req, res) {
                 if(err)
                     res.send(err);
                 else {
+                    console.log(users);
                     res.send(users);
                 }
             });
